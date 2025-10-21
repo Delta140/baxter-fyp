@@ -82,13 +82,9 @@ class Wobbler(object):
         control_rate = rospy.Rate(100)
         start = rospy.get_time()
         while not rospy.is_shutdown() and (rospy.get_time() - start < 10.0):
-            angle = random.uniform(-1.5, 1.5)
-            while (not rospy.is_shutdown() and
-                   not (abs(self._head.pan() - angle) <=
-                       baxter_interface.HEAD_PAN_ANGLE_TOLERANCE)):
-                self._head.set_pan(angle, speed=0.3, timeout=0)
-                control_rate.sleep()
-            command_rate.sleep()
+            self._head.command_nod()
+            control_rate.sleep()
+            
 
         self._done = True
         rospy.signal_shutdown("Example finished.")
