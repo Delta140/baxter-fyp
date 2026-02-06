@@ -70,10 +70,8 @@ class Handler(BaseHTTPRequestHandler):
 
             # Send body
         self.wfile.write(json.dumps(response))
-        
 
-# Run server
-    
+#for converting images from ROS to a useable format
 bridge = cv_bridge.CvBridge()
 
 
@@ -81,6 +79,7 @@ WindowX=440
 WindowY=80
 WindowSize=80
 
+#solves for inverse kinematics
 def IKSolver(NewPos, NewOri, limb):
     ns = "ExternalTools/"+limb+"/PositionKinematicsNode/IKService"
     iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
@@ -112,12 +111,14 @@ def IKSolver(NewPos, NewOri, limb):
     else:
         #print("no solution found")
         return 0
-    
+
+#runs the server in parallel
 def Server():
     server = HTTPServer(("0.0.0.0", 8080), Handler)
     print("Python 2.7 server running on port 8080")
     server.serve_forever()
 
+#Controls the arm given the response from the server
 def LeftArmControl():
     global action
     while(Shutdown==False):
@@ -133,8 +134,12 @@ def LeftArmControl():
         OriX=CurrentOri.x
         OriY=CurrentOri.y
         OriZ=CurrentOri.z
+
+        #debug
         if(action != "Empty"):
             print(action)
+
+        #Python 2.7 had no switch case
         if(action.upper()=="LEFT"):
             CurrentPos=CurrentPos._replace(y=PosY+0.05*(random.uniform(0.9,1.1)))
         elif(action.upper()=="RIGHT"):
@@ -150,13 +155,16 @@ def LeftArmControl():
         elif(action.upper()=="CLOSE_GRIP"):
             grip_left.close()
 
+        #resents the action variable
         action="Empty"
 
+        #solves Inverse Kinematics, and moves the roboot
         movement=IKSolver(CurrentPos,CurrentOri, "left")
         #print(movement)
         if(movement !=0):
             left.move_to_joint_positions(movement)
 
+#Does the start up
 if __name__ == '__main__':
 
     print("Initializing node... ")
